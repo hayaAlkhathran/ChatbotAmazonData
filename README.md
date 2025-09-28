@@ -118,20 +118,20 @@ S
      1. *Option A – Using Conda (recommended)*
 
    ```bash
-   git clone https://github.com/hayaAlkhathran/IBM_Hr_DataAnalysis.git
-   cd IBM_Hr_DataAnalysis
+   git clone  https://github.com/hayaAlkhathran/ChatbotAmazonData.git
+   cd Chatbot
    conda env create -f environment.yml
-   conda activate IBMHRDataAnalysis
-   streamlit run app.py
+   conda activate Chatbot
+   streamlit run Chatbot.py
    ```
 
       2. *Option B – Using pip*
 
    ```bash
-   git clone https://github.com/hayaAlkhathran/IBM_Hr_DataAnalysis.git
-   cd IBM_Hr_DataAnalysis
-   conda create -n IBMHRDataAnalysis python=3.10 -y
-   conda activate IBMHRDataAnalysis
+   git clone  https://github.com/hayaAlkhathran/ChatbotAmazonData.git
+   cd Chatbot
+   conda create -n Chatbot python=3.12 -y
+   conda activate Chatbot
    pip install -r requirements.txt
-   streamlit run app.py
+   streamlit run Chatbot.py
    ```
