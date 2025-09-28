@@ -1,0 +1,7 @@
+pandas
+openpyxl
+tqdm
+torch
+transformers
+streamlit
+jupyter

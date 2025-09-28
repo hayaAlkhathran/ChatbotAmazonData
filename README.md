@@ -107,14 +107,31 @@ S
 - **Groq API** – external chatbot for Excel QA
 
 ---
+## ⚡ Setup & Run (with Conda)
 
-## 📜 Example Workflow
+1. **Clone or Download** this project folder.
 
-1. Load Excel data in `Notebook.ipynb`.  
-2. Clean product reviews and engineer new columns.  
-3. Run **sentiment analysis** to tag reviews.  
-4. Start **Streamlit app**:
+2. **Install Anaconda / Miniconda**
+
+3. **Create a new environment and run the app**
+
+     1. *Option A – Using Conda (recommended)*
+
    ```bash
+   git clone https://github.com/hayaAlkhathran/IBM_Hr_DataAnalysis.git
+   cd IBM_Hr_DataAnalysis
+   conda env create -f environment.yml
+   conda activate IBMHRDataAnalysis
    streamlit run app.py
    ```
-   
+
+      2. *Option B – Using pip*
+
+   ```bash
+   git clone https://github.com/hayaAlkhathran/IBM_Hr_DataAnalysis.git
+   cd IBM_Hr_DataAnalysis
+   conda create -n IBMHRDataAnalysis python=3.10 -y
+   conda activate IBMHRDataAnalysis
+   pip install -r requirements.txt
+   streamlit run app.py
+   ```
