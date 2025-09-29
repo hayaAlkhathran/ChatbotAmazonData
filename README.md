@@ -21,9 +21,9 @@ It combines **Local LLaMA (RAG + FAISS)** and **Groq API** to provide insights f
    - [Groq API Chatbot](#1-groq-api-chatbot)
    - [Local LLaMA Chatbot](#2-local-llama-chatbot)
 4. [Tools & Setup](#-tools--setup)
-5. [Example Workflow](#-example-workflow)
-6. [License](#-license)
-7. [Credits](#-credits)
+5. [Setup & Run](#-setup--run-with-conda)   
+6. [Groq API Key Setup](#-groq-api-key-setup)  
+
 
 ---
 
@@ -63,15 +63,25 @@ It combines **Local LLaMA (RAG + FAISS)** and **Groq API** to provide insights f
 ## 📂 Project Structure
 
   ```bash
-   Chatbot/
-│── data/ # Excel datasets
-│── Notebook.ipynb # Data cleaning & sentiment analysis
+ Chatbot/
+│── Data/ # Excel datasets
+│ ├── amazon_product_reviews.xlsx
+│ └── amazon_product_reviews_updated1.xlsx
+│
+│── Images/ # Screenshots for README
+│ ├── Screenshot-2025-09-28-190729.png
+│ └── Screenshot-2025-09-28-200511.png
+│
+│── Notebook/ # Jupyter notebook for preprocessing
+│ └── Notebook.ipynb
+│
 │── chatbot.py # Streamlit chatbot interface
-│── .gitignore # Ignore sensitive files 
+│── environment.yml # Conda environment setup
+│── requirements.txt # Pip dependencies
 │── README.md # Project documentation
-   ```
+│── .gitignore # Ignore sensitive/unneeded files
 ---
-
+ ```
 ## 🖼 Screenshots & Explanation
 
 
@@ -94,7 +104,6 @@ This mode connects to the **Groq API** for Excel QA.
 - The chatbot responds with structured details, explaining that the **features column contains product attributes** such as *High Speed, Data Sync, Flexible, Fast Charging*.  
 - An **Excel preview** is also shown to validate the response.  
 
-S
 ---
 
 ## 🛠 Tools & Setup
@@ -103,7 +112,7 @@ S
 - **Streamlit** – interactive app
 - **Pandas** – preprocessing & features
 - **FAISS** – vector database for retrieval
-- **Transformers (LLaMA)** – local LLM for RAG
+- **Transformers (LLaMA)** – local LLM with RAG
 - **Groq API** – external chatbot for Excel QA
 
 ---
@@ -135,3 +144,24 @@ S
    pip install -r requirements.txt
    streamlit run Chatbot.py
    ```
+
+
+   ## 🔑 Groq API Key Setup
+
+This project requires a **Groq API key** to run the Groq chatbot.
+
+1. Create a folder in your project root called `.streamlit` (if it does not exist).  
+2. Inside that folder, create a file named `secrets.toml`.  
+3. Add your API key in the file like this:
+
+```toml
+GROQ_API_KEY = "your_api_key_here"
+```
+3. Add your API key in chatbot:
+```chatbot
+if "GROQ_API_KEY" not in st.secrets:
+    st.error(" Missing Groq API key in .streamlit/secrets.toml")
+    st.stop()
+
+GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+```
