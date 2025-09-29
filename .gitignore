@@ -1,0 +1,37 @@
+# ===============================
+# Python
+# ===============================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.env
+.venv/
+env/
+venv/
+*.conda
+*.env
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# ===============================
+# Project-specific
+# ===============================
+
+# Streamlit secrets 
+.streamlit/secrets.toml
+
+# Data files 
+Data/*.xlsx
+
+
+# ===============================
+# IDE / OS Files
+# ===============================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
