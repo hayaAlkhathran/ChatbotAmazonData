@@ -84,9 +84,8 @@ It combines **Local LLaMA (RAG + FAISS)** and **Groq API** to provide insights f
  ```
 ## 🖼 Screenshots & Explanation
 
-
 ### 1. Local LLaMA Chatbot
-![Local LLaMA Chatbot](Images/Screenshot%202025-09-28%20190729.png)
+![Local LLaMA Chatbot](Images/llama.png)
 
 💡 **Explanation:**  
 This mode uses **LLaMA locally with RAG + FAISS**.  
@@ -97,12 +96,37 @@ This mode uses **LLaMA locally with RAG + FAISS**.
 ---
 
 ### 2. Groq API Chatbot
-![Groq Chatbot](Images/Screenshot%202025-09-28%20200511.png)
+![Groq Chatbot](Images/groq.png)
+
 💡 **Explanation:**  
 This mode connects to the **Groq API** for Excel QA.  
 - The user asks: *“What kind of data is stored in the features column?”*  
 - The chatbot responds with structured details, explaining that the **features column contains product attributes** such as *High Speed, Data Sync, Flexible, Fast Charging*.  
 - An **Excel preview** is also shown to validate the response.  
+
+---
+
+### 3. Dataset Overview
+![Dataset Overview](Images/1.png)
+
+💡 **Explanation:**  
+Shows a preview of the dataset along with **key KPIs** such as total products, average rating, average discount, and number of unique categories.
+
+---
+
+### 4. Sentiment Distribution
+![Sentiment Distribution](Images/2.png)
+
+💡 **Explanation:**  
+Visualizes the **sentiment breakdown** of product reviews, comparing positive vs. negative reviews.
+
+---
+
+### 5. Average Rating per Category
+![Average Rating per Category](Images/3.png)
+
+💡 **Explanation:**  
+Highlights the **top-level categories** and their **average customer ratings**, helping identify the best-performing product segments.
 
 ---
 
@@ -150,18 +174,19 @@ This mode connects to the **Groq API** for Excel QA.
 
 This project requires a **Groq API key** to run the Groq chatbot.
 
-1. Create a folder in your project root called `.streamlit` (if it does not exist).  
-2. Inside that folder, create a file named `secrets.toml`.  
-3. Add your API key in the file like this:
+1. Create a File in your project root called `.env`  
+2. Add your API key in the file like this:
 
-```toml
+```env
 GROQ_API_KEY = "your_api_key_here"
 ```
 3. Add your API key in chatbot:
 ```chatbot
-if "GROQ_API_KEY" not in st.secrets:
-    st.error(" Missing Groq API key in .streamlit/secrets.toml")
-    st.stop()
+load_dotenv()  # load variables from .env
 
-GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+if not GROQ_API_KEY:
+    st.error("Missing Groq API key in .env file")
+    st.stop()
 ```

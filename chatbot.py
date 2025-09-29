@@ -2,13 +2,19 @@ import streamlit as st
 import pandas as pd
 import torch
 import faiss
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
 from sentence_transformers import SentenceTransformer
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from groq import Groq 
+import os
+from dotenv import load_dotenv
 
 # ===============================
-#  API Key
+#  API Key 
 # ===============================
+
 
 # ===============================
 # Load Dataset
@@ -97,21 +103,9 @@ def retrieve_context(query, top_k=3):
     results = df.iloc[indices[0]]
     return results
 
-def handle_structured_query(query):
-    q = query.lower()
-    if "how many category" in q or "number of categories" in q:
-        n = df["category"].nunique()
-        return f"The dataset contains {n} unique categories."
-    if "top" in q and "products by rating" in q:
-        top_products = df.sort_values("rating", ascending=False).head(5)[["product_name", "rating"]]
-        return "Here are the top 5 products by rating:\n" + top_products.to_string(index=False)
-    return None
 
 def rag_answer(user_query):
-    structured = handle_structured_query(user_query)
-    if structured:
-        return structured
-
+  
     context_df = retrieve_context(user_query, top_k=3)
     if isinstance(context_df, str):
         context_text = context_df
@@ -171,28 +165,120 @@ def groq_chat_answer(user_query, df):
         ]
     )
     return chat_completion.choices[0].message.content
+# ===============================
+# Sidebar Navigation
+# ===============================
+st.sidebar.image("Images/top_banner.png", use_container_width=True)
+st.sidebar.title("📌 Navigation")
+page = st.sidebar.radio("Choose a section:", ["Chatbots", "Data Analysis"])
+st.sidebar.image("Images/bottom_banner.png", use_container_width =True) 
+st.title("🛍️ Amazon Product Explorer")
 
 # ===============================
-# Streamlit UI
+# Page 1: Chatbots
 # ===============================
-st.title("🛍️ Amazon Product Chatbots")
+if page == "Chatbots":
+    st.subheader("🤖 Local LLaMA Chatbot (RAG + FAISS)")
+    user_input = st.text_input("Ask Local LLaMA:", key="local")
+    if user_input:
+        with st.spinner("Thinking (Local LLaMA)..."):
+            answer = rag_answer(user_input)
+            st.markdown(f"**Assistant (Local LLaMA):** {answer}")
+        with st.expander("🔍 Retrieved Context"):
+            st.dataframe(retrieve_context(user_input, top_k=3))
 
-# Local LLaMA
-st.subheader("🤖 Local LLaMA Chatbot (RAG + FAISS)")
-user_input = st.text_input("Ask Local LLaMA:", key="local")
-if user_input:
-    with st.spinner("Thinking (Local LLaMA)..."):
-        answer = rag_answer(user_input)
-        st.markdown(f"**Assistant (Local LLaMA):** {answer}")
-    with st.expander("🔍 Retrieved Context"):
-        st.dataframe(retrieve_context(user_input, top_k=3))
+    st.subheader("☁️ Groq API Chatbot (Excel QA, no embeddings)")
+    groq_input = st.text_input("Ask Groq:", key="groq")
+    if groq_input:
+        with st.spinner("Thinking (Groq API)..."):
+            groq_answer = groq_chat_answer(groq_input, df)
+            st.markdown(f"**Assistant (Groq):** {groq_answer}")
+        with st.expander("📄 Excel Preview "):
+            st.dataframe(df.head(5))
 
-# Groq API
-st.subheader("☁️ Groq API Chatbot (Excel QA, no embeddings)")
-groq_input = st.text_input("Ask Groq:", key="groq")
-if groq_input:
-    with st.spinner("Thinking (Groq API)..."):
-        groq_answer = groq_chat_answer(groq_input, df)
-        st.markdown(f"**Assistant (Groq):** {groq_answer}")
-    with st.expander("📄 Excel Preview (first row only)"):
-        st.dataframe(df.head(1))
+# ===============================
+# Page 2: Data Analysis
+# ===============================
+
+elif page == "Data Analysis":
+    st.subheader("📊 Dataset Overview")
+    st.write(df.head())
+
+    df["main_category"] = df["category"].astype(str).str.split("|").str[0]
+
+
+    # KPIs
+    k1, k2, k3, k4 = st.columns(4)
+    with k1: st.metric("Total Products", f"{len(df):,}")
+    with k2: st.metric("Avg Rating", f"{df['rating'].mean():.2f}")
+    with k3: st.metric("Avg Discount (%)", f"{((1 - (df['discounted_price']/df['actual_price']))*100).mean():.1f}%")
+    with k4: st.metric("Unique Categories", f"{df["main_category"].nunique():,}")
+
+    st.markdown("---")
+
+    #  Sentiment Distribution
+    st.subheader("💡 Sentiment Distribution of Reviews")
+    fig_sent = px.histogram(df, x="Feedback_review", color="Feedback_review",
+                            color_discrete_sequence=["#4f008c", "#ff375e"],
+                            template="plotly_white")
+    st.plotly_chart(fig_sent, use_container_width=True)
+
+    #  Ratings vs Sentiment Heatmap
+    st.subheader("⭐ Ratings vs Sentiment")
+    pivot = pd.crosstab(df["rating"], df["Feedback_review"]).reset_index()
+    fig_heat = px.imshow(pivot.set_index("rating"),
+                         text_auto=True, color_continuous_scale="YlGnBu",
+                         template="plotly_white")
+    st.plotly_chart(fig_heat, use_container_width=True)
+
+    # Price Distribution
+    st.subheader("💲 Price Distribution")
+    fig_price = px.histogram(df, x="actual_price", nbins=30, 
+                             color_discrete_sequence=["#4f008c"],
+                             template="plotly_white")
+    st.plotly_chart(fig_price, use_container_width=True)
+
+    # Top 10 Products by Review Count
+    st.subheader("🔝 Top 10 Products by Review Count")
+    top_products = df["product_name"].value_counts().head(10).reset_index()
+    top_products.columns = ["Product", "Reviews"]
+    fig_top = px.bar(top_products.sort_values("Reviews"),
+                     x="Reviews", y="Product", orientation="h",
+                     text="Reviews", color="Reviews",
+                     color_continuous_scale=["#4f008c", "#ff375e"],
+                     template="plotly_white")
+    st.plotly_chart(fig_top, use_container_width=True)
+
+    # Average Rating per Category
+    st.subheader("📦 Average Rating per Category")
+    avg_ratings = df.groupby("main_category")["rating"].mean().reset_index().sort_values("rating", ascending=False).head(10)
+    fig_avg = px.bar(avg_ratings.sort_values("rating"),
+                     x="rating", y="main_category", orientation="h",
+                     text="rating", color="rating",
+                     color_continuous_scale=["#4f008c", "#ff375e"],
+                     template="plotly_white")
+    st.plotly_chart(fig_avg, use_container_width=True)
+
+    #  Distribution of Features Column 
+    if "features" in df.columns:
+        st.subheader("⚙️ Distribution of Features")
+        feature_counts = df["features"].explode().value_counts().head(10).reset_index()
+        feature_counts.columns = ["Feature", "Count"]
+        fig_feat = px.bar(feature_counts.sort_values("Count"),
+                          x="Count", y="Feature", orientation="h",
+                          text="Count", color="Count",
+                          color_continuous_scale=["#4f008c", "#ff375e"],
+                          template="plotly_white")
+        st.plotly_chart(fig_feat, use_container_width=True)
+
+    # Categories with Highest Discount
+    st.subheader("💸 Categories with Highest Avg Discount")
+    df["discount_pct"] = (1 - (df["discounted_price"] / df["actual_price"])) * 100
+    discount_cat = df.groupby("main_category")["discount_pct"].mean().reset_index().sort_values("discount_pct", ascending=False).head(10)
+    fig_disc = px.bar(discount_cat.sort_values("discount_pct"),
+                      x="discount_pct", y="main_category", orientation="h",
+                      text="discount_pct", color="discount_pct",
+                      color_continuous_scale=["#4f008c", "#ff375e"],
+                      template="plotly_white")
+    st.plotly_chart(fig_disc, use_container_width=True)
+
